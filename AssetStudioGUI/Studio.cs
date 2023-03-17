@@ -480,15 +480,48 @@ namespace AssetStudioGUI
                                 new XAttribute("filename", filename),
                                 new XAttribute("createdAt", DateTime.UtcNow.ToString("s")),
                                 toExportAssets.Select(
-                                    asset => new XElement("Asset",
-                                        new XElement("Name", asset.Text),
-                                        new XElement("Container", asset.Container),
-                                        new XElement("Type", new XAttribute("id", (int)asset.Type), asset.TypeString),
-                                        new XElement("PathID", asset.m_PathID),
-                                        new XElement("Source", asset.SourceFile.fullName),
-                                        new XElement("Size", asset.FullSize)
-                                    )
-                                )
+                                    asset =>
+                                    {
+                                        var itemElement = new XElement("Asset",
+                                            new XElement("Name", asset.Text),
+                                            new XElement("Container", asset.Container),
+                                            new XElement("Type", new XAttribute("id", (int)asset.Type),
+                                                asset.TypeString),
+                                            new XElement("PathID", asset.m_PathID),
+                                            new XElement("Source", asset.SourceFile.fullName),
+                                            new XElement("Size", asset.FullSize)
+                                        );
+
+                                        if (asset.Type == ClassIDType.Texture2D)
+                                        {
+                                            Texture2D texture2D = asset.Asset as Texture2D;
+                                            itemElement.Add(new XElement("Width", texture2D.m_Width));
+                                            itemElement.Add(new XElement("Height", texture2D.m_Height));
+                                            itemElement.Add(new XElement("Format", texture2D.m_TextureFormat));
+                                            String filterMode = "Unknown";
+                                            switch (texture2D.m_TextureSettings.m_FilterMode)
+                                            { 
+                                                case 0: filterMode = "Point"; break;
+                                                case 1: filterMode = "Bilinear"; break;
+                                                case 2: filterMode = "Trilinear"; break;
+                                            }
+                                            itemElement.Add(new XElement("Filter_Mode", filterMode));
+
+                                            itemElement.Add(new XElement("Anisotropic_level", texture2D.m_TextureSettings.m_Aniso));
+                                            itemElement.Add(new XElement("Mip_map_bias", texture2D.m_TextureSettings.m_MipBias));
+
+                                            String wrapMode = "Unknown";
+                                            switch (texture2D.m_TextureSettings.m_WrapMode)
+                                            {
+                                                case 0: wrapMode= "Repeat"; break;
+                                                case 1: wrapMode= "Clamp"; break;
+                                            }
+                                            itemElement.Add(new XElement("Wrap_mode", wrapMode));
+                                            
+                                        }
+
+                                        return itemElement;
+                                    })
                             )
                         );
 
